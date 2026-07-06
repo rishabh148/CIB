@@ -7,6 +7,8 @@ services:
     healthCheckPath: /
     # Set environment variables from your .env file or Render UI
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.5
       - key: GEMINI_API_KEY
         sync: false # Set in Render UI for security
       # Add other environment variables as needed
