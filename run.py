@@ -38,6 +38,9 @@ def main():
     print("========================================================================")
 
     # Original subprocess launching logic for local dev (retained)
+    # backend_cmd = [sys.executable, "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    # For local development using `python run.py`, we'll use Gunicorn
+# The corrected line for Windows development
     backend_cmd = [sys.executable, "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
     print(f"🚀 Starting API Backend with command: {" ".join(backend_cmd)}")
     backend_process = subprocess.Popen(

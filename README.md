@@ -24,8 +24,8 @@ An automated, multi-agent competitor scraper, baseline pricing auditor, strategi
 ### 1. Configure Environmental Variables (Optional)
 Create a `.env` file in the root directory to set standard LLM API keys if you wish to run actual LLMs. Otherwise, the system runs a highly realistic dynamic corporate simulator out-of-the-box.
 ```env
-OPENAI_API_KEY=your-openai-api-key-here
-# Optional: ANTHROPIC_API_KEY, GEMINI_API_KEY, etc.
+GEMINI_API_KEY=your-gemini-api-key-here
+# Optional: OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, etc.
 ```
 
 ### 2. Install Dependencies
@@ -67,17 +67,18 @@ For deploying your application on Render, follow these steps:
 **Backend (FastAPI) Deployment on Render:**
 
 1.  **Configure `backend/render.yaml`**:
-    A `render.yaml` file has been created in the `backend` directory. This file defines the Render service for your FastAPI backend. Ensure you configure your environment variables (like `OPENAI_API_KEY`) in the Render dashboard for security.
+    A `render.yaml` file has been created in the `backend` directory. This file defines the Render service for your FastAPI backend. Ensure you configure your environment variables (like `GEMINI_API_KEY`) in the Render dashboard for security.
 
 2.  **Connect to Render**:
     *   Create a new Web Service on Render and connect your GitHub repository.
     *   Select "Blueprint" for the deployment method and point it to the `backend/render.yaml` file.
     *   Render will automatically detect your service and deploy it.
+    *   The backend also now includes `/health` and `/agent-health` endpoints for monitoring.
 
 **Frontend (Streamlit) Deployment on Streamlit Community Cloud:**
 
 1.  **Prepare `frontend/app.py`**:
-    The `frontend/app.py` has been updated to use an environment variable `API_URL` for the backend API endpoint. When deploying to Streamlit Community Cloud, you'll need to set this environment variable.
+    The `frontend/app.py` has been updated to use an environment variable `API_URL` for the backend API endpoint. When deploying to Streamlit Community Cloud, you\\\"ll need to set this environment variable.
 
 2.  **Deploy to Streamlit Community Cloud**:
     *   Ensure your `frontend` directory is in a GitHub repository.

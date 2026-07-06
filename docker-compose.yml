@@ -10,7 +10,7 @@ services:
     environment:
       PYTHONPATH: /app
       # Add other environment variables here, e.g., OPENAI_API_KEY
-    command: python /app/backend/main.py
+    command: gunicorn --bind 0.0.0.0:8000 main:app
     volumes:
       - ./backend:/app/backend
       - ./db.json:/app/db.json # Persist database

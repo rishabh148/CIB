@@ -28,249 +28,15 @@ def run_simulated_crew(competitor_name: str, baseline_features: str, baseline_pr
     is_acme = "acme" in competitor_name.lower()
     is_chatify = "chatify" in competitor_name.lower()
     
-    # 1. Scraping Sentinel Output
-    sentinel_output = f"""### Agent 1: The Web Scraping Sentinel - Scraping Report
-**Target Competitor**: {competitor_name}
-**Status**: Page Parsing Successful. Clean Text Extracted.
-
-#### Extracted Sections:
-1. **Core Value Proposition**: Identifies as a leading customer-centric automated SaaS solution.
-2. **Feature Announcements**: 
-   {"- AI Flow Assistant, Role-Based Access Controls (RBAC), and Live Performance Dashboards." if is_acme else "- Omnichannel Support Hub, AI Agent Autopilot, GDPR EU compliance, and Deep Salesforce/Hubspot syncing." if is_chatify else "- Enterprise Analytics Engine, SOC-2 compliance portal, real-time push updates, and SSO department mapping."}
-3. **Pricing Structures**: 
-   {"- Starter ($19), Pro ($79) with AI Add-on (+$15), Business ($199), Enterprise Gate (Custom)." if is_acme else "- Starter ($29 - raised from $19), Growth ($129 - raised from $79), Pro ($349), Enterprise ($1,200+)." if is_chatify else "- Basic ($39), Business ($149 - raised from $99), Enterprise Gate (Custom)."}
-"""
-
-    # 2. Feature Delta Analyst Output
-    if is_acme:
-        delta_output = """### Agent 2: Feature Delta & Messaging Analysis
-**Comparison Baseline**:
-- Simple contact form management
-- Standard email notifications
-- Weekly CSV exports
-- Single user dashboard
-
-**Identified New Features**:
-1. **AI Flow Assistant**: Natural language workflow generator (major shift towards GenAI).
-2. **Team Workspaces & RBAC**: Moving upmarket. Support for larger teams and departmental restrictions.
-3. **Advanced Webhooks**: Custom headers & rate limits (improves API-first workflow handling).
-4. **Real-time Dashboards**: Live pipeline and success rate metrics.
-
-**Messaging Shift**:
-- From *"Simple workflow form management"* to *"Enterprise-grade high-growth workflow automation."*
-"""
-    elif is_chatify:
-        delta_output = """### Agent 2: Feature Delta & Messaging Analysis
-**Comparison Baseline**:
-- Multi-channel widget (Web, WhatsApp)
-- Up to 1,000 monthly chats
-- Automated canned responses
-- Standard reporting
-
-**Identified New Features**:
-1. **Omnichannel Hub**: Unified agent inbox bundling WhatsApp, Facebook, SMS, Instagram.
-2. **AI Agent Autopilot**: Automated prompt-and-knowledge-base customer answering system (75% ticket resolution claim).
-3. **Deep Integrations**: Direct HubSpot and Salesforce bi-directional contact synchronization.
-4. **GDPR / Regional EU Hosting**: Data residency and compliance guarantees.
-
-**Messaging Shift**:
-- From *"Conversational chat widget"* to *"Enterprise-grade Omnichannel AI engagement platform."*
-"""
-    else:
-        delta_output = f"""### Agent 2: Feature Delta & Messaging Analysis
-**Comparison Baseline**:
-{baseline_features}
-
-**Identified New Features**:
-1. **Enterprise Analytics Engine**: Advanced predictive modeling with built-in anomaly indicators.
-2. **Automated SOC-2 Compliance Portal**: Streamlined compliance dashboards.
-3. **Advanced Integration Sync**: Real-time push syncing eliminating batch queues.
-4. **Collaborative Workspaces & SSO**: High-security SSO department mapping.
-
-**Messaging Shift**:
-- Strategic pivot towards mature corporate accounts, emphasizing data security, analytics, and speed.
-"""
-
-    # 3. Pricing & Packaging Analyst Output
-    if is_acme:
-        pricing_output = """### Agent 3: Pricing and Packaging Impact Report
-**Baseline Pricing**:
-- Free Tier ($0/mo)
-- Pro Tier ($49/mo)
-- Enterprise Tier (Custom)
-
-**Current Pricing Architecture**:
-- Starter Tier ($19/mo) - *Replaced Free Tier to increase monetization floor.*
-- Pro Tier ($79/mo) - *Increased by $30/mo (+61% price raise).* Includes custom webhooks.
-- AI Flow Assistant Add-on ($15/mo) - *Excellent land-and-expand up-sell strategy.*
-- Business Scale Tier ($199/mo) - *New tier introduced between Pro and Enterprise.*
-- Enterprise Gate Tier (Custom) - *Required for SSO, SAML, and now RBAC/Workspaces.*
-
-**Monetization Strategy Analysis**:
-1. **Elimination of Free**: Drastically filters out non-paying support overhead.
-2. **Gating Strategy**: Placing RBAC/Team Workspaces behind the custom Enterprise gate forces multi-user accounts to buy high-ticket enterprise contracts.
-3. **GenAI Monetization**: Selling AI features as a paid add-on on standard plans but bundled on high plans is a masterful way to drive expansion revenue.
-"""
-    elif is_chatify:
-        pricing_output = """### Agent 3: Pricing and Packaging Impact Report
-**Baseline Pricing**:
-- Starter Tier ($19/mo)
-- Growth Tier ($79/mo)
-- Scale Tier ($299/mo)
-
-**Current Pricing Architecture**:
-- Starter Tier ($29/mo) - *Price increase of +52% ($10/mo raise).*
-- Growth Tier ($129/mo) - *Price increase of +63% ($50/mo raise).* Includes automated AI knowledge routing.
-- Professional Tier ($349/mo) - *Scale tier renamed and price increased by +16%.*
-- Enterprise Gate Tier (Custom starting at $1,200/mo) - *Highly restrictive gate.* Moving AI Autopilot and Omnichannel Bundle fully into Enterprise.
-
-**Monetization Strategy Analysis**:
-1. **Inflationary Adjustments**: Aggressive expansion of gross margins via 50%+ subscription raises on entry and growth levels.
-2. **AI Premium Gate**: Forcing clients to contract custom enterprise rates just to access the AI Agent Autopilot prevents low-margin API usage.
-3. **In-Inbox Monetization**: Bundled channels (WhatsApp, SMS, FB) are positioned to lock corporate clients into multi-year commitments.
-"""
-    else:
-        pricing_output = f"""### Agent 3: Pricing and Packaging Impact Report
-**Baseline Pricing**:
-{baseline_pricing}
-
-**Current Pricing Architecture**:
-- Basic Plan ($39/mo)
-- Business Plan ($149/mo) - *Upward price adjustment of +50%.* Includes webhook integrations.
-- Enterprise Gate Tier (Custom contract) - *Restricts SSO, SOC-2 audit logs, and custom residency.*
-
-**Monetization Strategy Analysis**:
-1. **Value-Based Gating**: Standard webhook and API triggers are moved up to the $149/mo tier, optimizing developer-focused revenue.
-2. **Enterprise Shield Gating**: Restricting critical corporate needs (SSO, SOC-2, Data residency) behind custom contract tiers forces enterprise security teams to pay premium pricing.
-"""
-
-    # 4. Threat & SWOT Evaluator Output
-    threat_score = 8 if (is_acme or is_chatify) else 6
-    if is_acme:
-        swot_output = """### Agent 4: Strategic Threat & SWOT Matrix
-**Competitor**: Acme SaaS
-**Assessed Strategic Threat Level**: **8 / 10 (HIGH)**
-
-#### SWOT Matrix
-* **STRENGTHS (Internal to Competitor)**:
-  - Strong, intuitive visual workflow designer.
-  - Huge pre-existing integration catalog (20+ tools).
-  - Rapid release cycle of automated triggers.
-* **WEAKNESSES (Internal to Competitor)**:
-  - High entry friction after eliminating the Free tier.
-  - Customer confusion regarding add-on pricing for AI tools.
-* **OPPORTUNITIES (External to Market)**:
-  - High demand for low-code GenAI workflow tools.
-  - Enterprise cloud migration in mid-market segments.
-* **THREATS (External to Our Position)**:
-  - Acme's transition to team collaboration (RBAC) allows them to easily steal our corporate team accounts.
-  - Their natural language prompt-to-workflow feature makes our manual configuration model feel dated.
-"""
-    elif is_chatify:
-        swot_output = """### Agent 4: Strategic Threat & SWOT Matrix
-**Competitor**: Chatify AI
-**Assessed Strategic Threat Level**: **9 / 10 (CRITICAL)**
-
-#### SWOT Matrix
-* **STRENGTHS (Internal to Competitor)**:
-  - Native multi-channel coverage (WhatsApp, FB, SMS, Instagram).
-  - Robust AI indexing capabilities across various file formats (Notion, PDF).
-  - Strong European brand alignment and GDPR-compliance messaging.
-* **WEAKNESSES (Internal to Competitor)**:
-  - Drastic price raises (50%+) might churn price-sensitive starter customers.
-  - Higher support load due to complex omnichannel integrations.
-* **OPPORTUNITIES (External to Market)**:
-  - Massive tailwinds as customer service budgets shift towards fully automated AI agents.
-  - Mid-market retail expansion needing instant WhatsApp ordering.
-* **THREATS (External to Our Position)**:
-  - Their Salesforce & HubSpot direct contact synchronization allows them to intercept customer databases.
-  - If we don't support custom file-based AI bot training soon, Chatify will dominate the support market.
-"""
-    else:
-        swot_output = f"""### Agent 4: Strategic Threat & SWOT Matrix
-**Competitor**: {competitor_name}
-**Assessed Strategic Threat Level**: **{threat_score} / 10 (MODERATE-HIGH)**
-
-#### SWOT Matrix
-* **STRENGTHS**:
-  - Robust performance, enterprise SSO support, and SOC-2 compliance portal.
-  - Instant synchronization updates.
-* **WEAKNESSES**:
-  - Higher subscription baseline ($39/mo) which alienates hobbyist and entry developers.
-* **OPPORTUNITIES**:
-  - Enterprise segments seeking compliance-ready, high-speed automated portals.
-* **THREATS**:
-  - Moving security and compliance behind the Enterprise Gate raises their contract values and locks out our standard product.
-"""
-
-    # 5. Executive Briefer Output
-    if is_acme:
-        brief_output = """### Agent 5: Executive Briefing Memo
-**To**: Executive Leadership & VP of Product
-**From**: Principal Product Executive Briefer
-**Subject**: Competitive Response: Acme SaaS Feature Expansion & GenAI Workflow Pivot
-
----
-
-#### 1. Executive Summary
-Acme SaaS has executed a major strategic pivot, repositioning from a simple tool into an enterprise-ready workflow engine. By raising their Pro tier price (+61%), eliminating their Free tier, and introducing a paid **AI Flow Assistant ($15/mo)**, they are significantly upgrading their average revenue per account (ARPU) while funding enterprise-ready security controls (RBAC, SAML SSO).
-
-#### 2. Key Insights
-- **The GenAI Threat**: Acme's prompt-to-workflow AI eliminates configuration friction. Users can generate complex multi-app pipelines in seconds.
-- **Enterprise Expansion**: Moving RBAC and Team workspaces behind an Enterprise contract is a direct land-and-expand move designed to convert high-growth business accounts.
-
-#### 3. Strategic Action Plan & Recommendations
-* **Product Engineering (Urgent)**: Accelerate our roadmap for AI-driven workflow assistance. We must build a conversational trigger-builder to match Acme's flow generator.
-* **Marketing & Positioning**: Target Acme's displaced Free/Starter users. Launch a marketing campaign: *"Keep Your Workflows Free - No Minimums, No Seat Penalties."*
-* **Sales Enablement**: Train the field team to sell our *built-in team workspaces* which are included in our standard Pro tiers, emphasizing that Acme gates these critical collaboration features behind custom enterprise contracts.
-"""
-    elif is_chatify:
-        brief_output = """### Agent 5: Executive Briefing Memo
-**To**: Executive Leadership & VP of Product
-**From**: Principal Product Executive Briefer
-**Subject**: Competitive Response: Chatify AI Omnichannel & Conversational AI Autopilot
-
----
-
-#### 1. Executive Summary
-Chatify AI is aggressively capitalizing on the GenAI customer support boom, implementing massive price increases of **52% to 63%** across starter plans, while packaging their core AI asset—the **AI Agent Autopilot**—exclusively within premium Enterprise contract tiers. Simultaneously, their unified omnichannel agent inbox creates a powerful messaging lock-in.
-
-#### 2. Key Insights
-- **Margin Expansion**: Chatify is sacrificing the hobbyist market to fund deep CRM partnerships (HubSpot/Salesforce).
-- **The AI Moat**: By routing customer knowledge bases directly into AI agents, they reduce support tickets by 75%, representing a high ROI pitch for corporate buyers.
-
-#### 3. Strategic Action Plan & Recommendations
-* **Product Engineering (Urgent)**: Build an automated PDF/Notion file uploader to allow local training of our customer chat widgets.
-* **Marketing & Positioning**: Counter Chatify's massive pricing increases with stable growth plans. Launch targeted outreach: *"Tired of 60% Chat Price Hikes? Transition to Chatify's Stable Alternative."*
-* **Sales Enablement**: Highlight that our platform offers full omnichannel capabilities without forcing users into custom Enterprise pricing models starting at $1,200/mo.
-"""
-    else:
-        brief_output = f"""### Agent 5: Executive Briefing Memo
-**To**: Executive Leadership & VP of Product
-**From**: Principal Product Executive Briefer
-**Subject**: Competitive Response: {competitor_name} Security & Integration Updates
-
----
-
-#### 1. Executive Summary
-{competitor_name} has shifted focus upmarket by rolling out a SOC-2 portal, real-time push-sync, and SSO mapping. They have adjusted pricing upward by +50% on business tiers to capture larger accounts.
-
-#### 2. Key Insights
-- The competitor is focusing on security compliance as their key up-sell gate.
-- Real-time data pipeline syncing is their new technical differentiator.
-
-#### 3. Strategic Action Plan & Recommendations
-* **Product Engineering**: Expand our security compliance documentation and support SAML integration.
-* **Marketing**: Highlight our open-source integration flexibility and flat developer pricing.
-"""
-
-    return {
+    # Simplified output for simulated mode, indicating full analysis requires an LLM.
+    simulated_output = {
         "raw_scraped_data": scraped_data,
-        "feature_deltas": delta_output,
-        "pricing_analysis": pricing_output,
-        "swot_analysis": swot_output,
-        "executive_brief": brief_output,
-    }, threat_score
+        "feature_deltas": "Feature delta analysis requires a configured LLM API key.",
+        "pricing_analysis": "Pricing analysis requires a configured LLM API key.",
+        "swot_analysis": "SWOT and threat evaluation require a configured LLM API key.",
+        "executive_brief": "Executive briefing requires a configured LLM API key.",
+    }
+    return simulated_output, 1 # Return a default threat score of 1 in simulated mode
 
 
 def run_crewai_flow(competitor_name: str, baseline_features: str, baseline_pricing: str, scraped_data: str) -> Tuple[Dict[str, str], int]:
@@ -285,83 +51,90 @@ def run_crewai_flow(competitor_name: str, baseline_features: str, baseline_prici
 
     try:
         from crewai import Agent, Task, Crew, Process
+        from langchain_google_genai import ChatGoogleGenerativeAI
         
-        # Configure the LLM
-        # CrewAI automatically uses OPENAI_API_KEY if configured. Let's create our agents.
+        # Configure the LLM to use Gemini
+        # Ensure GEMINI_API_KEY is set in your .env file or environment variables
+        gemini_llm = ChatGoogleGenerativeAI(model="gemini-pro", verbose=True, temperature=0.1, google_api_key=os.getenv("GEMINI_API_KEY"))
         
         # Agent 1: The Scraping Sentinel
         sentinel = Agent(
             role="The Web Scraping Sentinel",
-            goal=f"Parse, structure, and organize raw competitor scraped text for {competitor_name}.",
-            backstory="You are an elite competitive intelligence data extractor. You take noisy, raw web scrapes and extract clean, structured features, blog posts, and pricing tables.",
+            goal=f"Parse, structure, and organize raw competitor scraped text for {competitor_name}. Focus on extracting factual information regarding features, blog posts, and pricing tables, avoiding any speculative content.",
+            backstory="You are an elite competitive intelligence data extractor. Your primary function is to meticulously analyze raw web scrapes and extract only verifiable, clean, and structured data, specifically focusing on competitor features, blog posts, and pricing. You are designed to prevent hallucination by strictly adhering to the provided text and not inferring or generating information not explicitly present.",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=gemini_llm
         )
         
         # Agent 2: The Feature Delta Analyst
         delta_analyst = Agent(
             role="The Feature Delta Analyst",
-            goal=f"Compare newly structured updates of {competitor_name} against known baseline features: {baseline_features}.",
-            backstory="You are a detailed-oriented product analyst. You inspect updates and identify new features, messaging pivots, and platform additions.",
+            goal=f"Compare newly structured updates of {competitor_name} against known baseline features: {baseline_features}. Focus on identifying concrete new features, messaging pivots, and platform additions that are explicitly stated in the structured data, without making assumptions or extrapolations.",
+            backstory="You are a highly detailed and fact-checking product analyst. Your role is to rigorously inspect updates and identify new features, messaging pivots, and platform additions based *only* on the structured data provided. You must avoid any form of hallucination by sticking strictly to the evidence and not generating information that isn't directly supported by the input.",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=gemini_llm
         )
         
         # Agent 3: The Pricing & Packaging Analyst
         pricing_analyst = Agent(
             role="The Pricing and Packaging Analyst",
-            goal=f"Compare current scraped pricing models against baseline pricing: {baseline_pricing}.",
-            backstory="You are a monetization consultant. You spot pricing adjustments, subscription tier changes, gating of features, and upsell mechanisms.",
+            goal=f"Compare current scraped pricing models against baseline pricing: {baseline_pricing}. Your analysis must be purely factual, detailing only observed price increases, subscription tier changes, feature gating, and upsell mechanisms as presented in the data, without speculation.",
+            backstory="You are a precise monetization consultant. Your expertise lies in accurately identifying pricing adjustments, subscription tier changes, feature gating, and upsell mechanisms directly from the provided data. You are programmed to be highly accurate and to avoid hallucination by only reporting what is explicitly evident in the pricing structures.",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=gemini_llm
         )
         
         # Agent 4: The Threat & SWOT Evaluator
         threat_evaluator = Agent(
             role="The Threat and SWOT Evaluator",
-            goal=f"Synthesize the feature deltas and pricing changes for {competitor_name} to generate a SWOT matrix and a strategic threat level score from 1 to 10.",
-            backstory="You are a principal corporate strategist. You translate competitive actions into clear threat matrices and strategic risk scores.",
+            goal=f"Synthesize the feature deltas and pricing changes for {competitor_name} to generate a factual SWOT matrix and a strategic threat level score from 1 to 10. Every point in the SWOT matrix and the threat score must be directly derivable from the preceding agent outputs, ensuring no new or unsubstantiated information is introduced.",
+            backstory="You are a principal corporate strategist with a commitment to factual reporting. You translate competitive actions into clear threat matrices and strategic risk scores, but only based on the verified data provided by previous agents. You are strictly against hallucination, ensuring all insights are evidence-based and directly traceable to the input.",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=gemini_llm
         )
         
         # Agent 5: The Executive Briefer
         executive_briefer = Agent(
             role="The Executive Briefer",
-            goal=f"Synthesize all agent outputs to draft a high-impact, professional executive memo with action recommendations for leadership.",
-            backstory="You are the VP of Product's chief competitive strategist. You write highly actionable, high-leverage business briefs that inspire engineering and sales roadmaps.",
+            goal=f"Synthesize all agent outputs to draft a high-impact, professional executive memo with action recommendations for leadership. The memo must strictly adhere to the factual information provided by the preceding agents, avoiding any form of hallucination or introduction of new, unverified details. All recommendations must be directly supported by the synthesized data.",
+            backstory="You are the VP of Product's chief competitive strategist, renowned for drafting highly actionable, high-leverage business briefs that strictly adhere to verified data. You inspire engineering and sales roadmaps by ensuring all insights and recommendations are grounded in factual competitive intelligence, thereby preventing any hallucination in strategic guidance.",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            llm=gemini_llm
         )
         
         # TASKS
         t1 = Task(
-            description=f"Analyze this raw scraped webpage and pricing data: \n{scraped_data}\nStructure it into clean sections.",
-            expected_output="Structured text dividing the landing page information, announcements, and pricing tables.",
+            description=f"Analyze this raw scraped webpage and pricing data: \n{scraped_data}\nStructure it into clean sections. The output must strictly contain information found in the input, without any embellishment or fabrication.",
+            expected_output="Structured text accurately dividing the landing page information, announcements, and pricing tables, directly reflecting the content of the scraped data.",
             agent=sentinel
         )
         
         t2 = Task(
-            description=f"Compare the structured updates from Agent 1 against these baselines: \n{baseline_features}\nList all new features, enhancements, and shifts.",
-            expected_output="A list of newly identified features, product additions, and messaging adjustments.",
+            description=f"Compare the structured updates from Agent 1 against these baselines: \n{baseline_features}\nList all new features, enhancements, and shifts. Ensure every item listed is directly verifiable from the provided inputs, and do not introduce any new information.",
+            expected_output="A list of newly identified features, product additions, and messaging adjustments, all of which are explicitly supported by the comparison data.",
             agent=delta_analyst
         )
         
         t3 = Task(
-            description=f"Compare the structured pricing from Agent 1 against these baselines: \n{baseline_pricing}\nDetail price increases, tier changes, and gating strategies.",
-            expected_output="Detailed report explaining package modifications, price changes, and expansion strategies.",
+            description=f"Compare the structured pricing from Agent 1 against these baselines: \n{baseline_pricing}\nDetail price increases, tier changes, and gating strategies. The report must be strictly factual, based only on the provided pricing data, and must not include any speculative analysis.",
+            expected_output="Detailed, factual report explaining package modifications, precise price changes, and explicit expansion strategies as identified from the structured pricing data.",
             agent=pricing_analyst
         )
         
         t4 = Task(
-            description="Use the feature updates and pricing reports to produce a detailed SWOT matrix and a distinct threat level score (1 to 10) for our product.",
-            expected_output="A clean Strengths, Weaknesses, Opportunities, and Threats matrix, followed by a final numeric score (e.g., Threat Score: 8/10).",
+            description="Use the factual feature updates and pricing reports to produce a detailed SWOT matrix and a distinct threat level score (1 to 10) for our product. Ensure all points in the SWOT analysis and the threat score are directly supported by the preceding reports, without introducing any external or unverified information.",
+            expected_output="A clean, evidence-based Strengths, Weaknesses, Opportunities, and Threats matrix, followed by a final numeric score (e.g., Threat Score: 8/10), all derived solely from the provided reports.",
             agent=threat_evaluator
         )
         
         t5 = Task(
-            description="Combine the SWOT matrix, feature delta, and pricing changes to draft an Executive Memo with clear product and sales action items.",
-            expected_output="A complete product executive brief with standard business headers, summary, and competitive playbook items.",
+            description="Combine the factual SWOT matrix, feature delta, and pricing changes to draft an Executive Memo with clear, evidence-based product and sales action items. The memo must not contain any new information not present in the preceding agent outputs, ensuring all recommendations are directly supported by the gathered intelligence.",
+            expected_output="A complete, fact-based product executive brief with standard business headers, a summary, and competitive playbook items, all strictly derived from the inputs of previous agents.",
             agent=executive_briefer
         )
         
@@ -406,3 +179,5 @@ def run_crewai_flow(competitor_name: str, baseline_features: str, baseline_prici
     except Exception as e:
         print(f"Error running CrewAI directly (falling back to simulator): {str(e)}")
         return run_simulated_crew(competitor_name, baseline_features, baseline_pricing, scraped_data)
+
+

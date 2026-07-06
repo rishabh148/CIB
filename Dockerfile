@@ -38,4 +38,4 @@ EXPOSE 8501
 ENV PYTHONPATH=/app
 
 # Command to run the application using run.py
-CMD ["python", "run.py"]
+# CMD ["python", "run.py"] # This will be handled by Gunicorn in docker-compose.yml

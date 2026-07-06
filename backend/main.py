@@ -51,6 +51,38 @@ class AnalysisRequest(BaseModel):
 def read_root():
     return {"message": "Welcome to the Competitive Intelligence Bureau API. Use /docs for documentation."}
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "message": "Backend is healthy."}
+
+@app.get("/agent-health")
+def agent_health_check():
+    try:
+        from crewai import Agent, Task, Crew, Process
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        import os
+
+        if not os.getenv("GEMINI_API_KEY") and not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY") and not os.getenv("GROQ_API_KEY"):
+            return {"status": "warning", "message": "No LLM API key configured. Running in simulated mode."}
+
+        # Attempt to initialize a dummy LLM to check if the API key is valid
+        # This is a basic check and might not cover all LLM specific issues
+        if os.getenv("GEMINI_API_KEY"):
+            llm = ChatGoogleGenerativeAI(model="gemini-pro", verbose=False, temperature=0.1, google_api_key=os.getenv("GEMINI_API_KEY"))
+        elif os.getenv("OPENAI_API_KEY"):
+            from langchain_openai import ChatOpenAI
+            llm = ChatOpenAI(temperature=0.1)
+        # Add checks for other LLMs if needed
+        else:
+            return {"status": "error", "message": "Unsupported LLM configured or API key missing.", "detail": "Please configure a supported LLM API key (e.g., GEMINI_API_KEY, OPENAI_API_KEY)."}
+
+        # If LLM initialization succeeds, it indicates basic connectivity
+        return {"status": "ok", "message": "Agent system is healthy and LLM is configured."}
+    except ImportError:
+        return {"status": "error", "message": "CrewAI or Langchain-Google-GenAI not installed."}
+    except Exception as e:
+        return {"status": "error", "message": f"Agent system check failed: {str(e)}"}
+
 @app.get("/api/competitors", response_model=List[Competitor])
 def read_competitors():
     return get_competitors()
