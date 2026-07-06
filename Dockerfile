@@ -7,11 +7,11 @@ ENV PYTHONPATH=/app \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-COPY backend/requirements.txt /tmp/backend-requirements.txt
-COPY frontend/requirements.txt /tmp/frontend-requirements.txt
+ARG SERVICE=backend
+ENV SERVICE=${SERVICE}
 
-RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt \
-    && pip install --no-cache-dir -r /tmp/frontend-requirements.txt
+COPY ${SERVICE}/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY backend /app/backend
 COPY frontend /app/frontend
