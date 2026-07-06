@@ -2,7 +2,7 @@ services:
   - type: web
     name: competitive-intelligence-backend
     env: python
-    buildCommand: "pip install -r backend/requirements.txt"
+    buildCommand: "pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r backend/requirements.txt"
     startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /
     # Set environment variables from your .env file or Render UI
