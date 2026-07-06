@@ -2,12 +2,12 @@ services:
   - type: web
     name: competitive-intelligence-backend
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "pip install -r backend/requirements.txt"
     startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /
     # Set environment variables from your .env file or Render UI
     envVars:
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false # Set in Render UI for security
       # Add other environment variables as needed
 

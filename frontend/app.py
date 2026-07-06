@@ -18,6 +18,7 @@ st.set_page_config(
 
 # API Endpoint Configuration
 API_URL = os.environ.get("API_URL", "http://localhost:8000/api")
+API_BASE_URL = API_URL[:-4] if API_URL.endswith("/api") else API_URL
 
 # Helper function to query the backend
 def fetch_competitors():
@@ -131,7 +132,7 @@ with st.sidebar:
     # Check Server Status
     server_running = False
     try:
-        check_res = requests.get(f"http://localhost:8000/", timeout=2)
+        check_res = requests.get(f"{API_BASE_URL}/", timeout=2)
         if check_res.status_code == 200:
             server_running = True
     except Exception:

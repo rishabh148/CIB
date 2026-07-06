@@ -1,11 +1,12 @@
 import os
 import re
 import time
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, List, Tuple
 from dotenv import load_dotenv
 
 # Load environmental variables
-load_dotenv()
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
 def is_api_key_configured() -> bool:
     """Returns True if any standard LLM API key is set in the environment."""
@@ -18,25 +19,221 @@ def is_api_key_configured() -> bool:
         ]
     )
 
+def _clean_line(line: str) -> str:
+    """Normalize markdown-ish scrape lines without changing their meaning."""
+    return re.sub(r"\s+", " ", line.strip(" \t-*#")).strip()
+
+
+def _extract_candidate_lines(text: str) -> List[str]:
+    candidates: List[str] = []
+    for raw_line in text.splitlines():
+        line = _clean_line(raw_line)
+        if not line or line.startswith("==="):
+            continue
+        has_signal = (
+            raw_line.lstrip().startswith(("-", "1.", "2.", "3.", "4.", "5."))
+            or "**" in raw_line
+            or "$" in line
+            or ":" in line
+        )
+        if has_signal and len(line) > 6:
+            candidates.append(line.replace("**", ""))
+    return candidates
+
+
+def _extract_feature_lines(scraped_data: str) -> List[str]:
+    price_words = ("tier", "plan", "$", "pricing", "contract", "custom pricing", "previously", "/mo")
+    feature_words = (
+        "assistant", "workspace", "access", "rbac", "webhook", "dashboard",
+        "integration", "hub", "autopilot", "salesforce", "hubspot", "gdpr",
+        "hosting", "analytics", "compliance", "sync", "sso", "ai", "feature",
+    )
+    features: List[str] = []
+    for line in _extract_candidate_lines(scraped_data):
+        lower = line.lower()
+        if any(word in lower for word in price_words) and not any(word in lower for word in feature_words):
+            continue
+        if any(word in lower for word in feature_words):
+            features.append(line)
+    return _dedupe_keep_order(features)
+
+
+def _extract_pricing_lines(scraped_data: str) -> List[str]:
+    pricing_lines: List[str] = []
+    in_pricing_section = False
+    for raw_line in scraped_data.splitlines():
+        stripped = raw_line.strip()
+        line = _clean_line(raw_line).replace("**", "")
+        lower = line.lower()
+        if not line or line.startswith("==="):
+            continue
+
+        is_heading = stripped.startswith("#")
+        is_pricing_heading = is_heading and any(
+            word in lower for word in ("pricing", "plans", "tiers", "subscriptions")
+        )
+        if is_pricing_heading:
+            in_pricing_section = True
+            pricing_lines.append(line)
+            continue
+        if is_heading and in_pricing_section and not is_pricing_heading:
+            in_pricing_section = False
+
+        explicit_price_line = "$" in line or "/mo" in lower or "previously" in lower
+        named_package_line = any(word in lower for word in ("tier", " plan", "gate tier", "custom contract"))
+        if explicit_price_line or (in_pricing_section and named_package_line):
+            pricing_lines.append(line)
+
+    return _dedupe_keep_order(pricing_lines)
+
+
+def _dedupe_keep_order(items: List[str]) -> List[str]:
+    seen = set()
+    deduped: List[str] = []
+    for item in items:
+        key = re.sub(r"[^a-z0-9]+", " ", item.lower()).strip()
+        if key and key not in seen:
+            seen.add(key)
+            deduped.append(item)
+    return deduped
+
+
+def _tokens(text: str) -> set:
+    stop_words = {
+        "the", "and", "with", "for", "from", "this", "that", "into", "your",
+        "our", "are", "was", "were", "has", "have", "had", "includes", "up",
+        "to", "of", "in", "a", "an", "mo", "tier", "plan",
+    }
+    return {token for token in re.findall(r"[a-z0-9]+", text.lower()) if token not in stop_words and len(token) > 2}
+
+
+def _is_new_against_baseline(item: str, baseline: str) -> bool:
+    item_tokens = _tokens(item)
+    baseline_tokens = _tokens(baseline)
+    if not item_tokens:
+        return False
+    overlap = len(item_tokens & baseline_tokens) / max(len(item_tokens), 1)
+    return overlap < 0.45
+
+
+def _extract_price_movements(pricing_lines: List[str]) -> List[str]:
+    movements: List[str] = []
+    for line in pricing_lines:
+        previous_match = re.search(r"\$(\d+(?:,\d{3})*)(?:/mo)?\s*\(previously\s*\$(\d+(?:,\d{3})*)", line, re.IGNORECASE)
+        if previous_match:
+            current = previous_match.group(1)
+            previous = previous_match.group(2)
+            movements.append(f"{line} (observed increase from ${previous}/mo to ${current}/mo)")
+        elif "$" in line or "custom" in line.lower() or "gate" in line.lower():
+            movements.append(line)
+    return _dedupe_keep_order(movements)
+
+
+def _format_bullets(items: List[str], fallback: str) -> str:
+    if not items:
+        return f"- {fallback}"
+    return "\n".join(f"- {item}" for item in items)
+
+
+def _build_structured_scrape(competitor_name: str, scraped_data: str, feature_lines: List[str], pricing_lines: List[str]) -> str:
+    return (
+        f"Scraping Sentinel Report: {competitor_name}\n\n"
+        "Observed product, feature, and positioning signals:\n"
+        f"{_format_bullets(feature_lines, 'No explicit feature signals were found in the scraped content.')}\n\n"
+        "Observed pricing and packaging signals:\n"
+        f"{_format_bullets(pricing_lines, 'No explicit pricing signals were found in the scraped content.')}\n\n"
+        "Source scrape used by downstream agents:\n"
+        f"{scraped_data}"
+    )
+
+
+def _score_threat(new_features: List[str], price_movements: List[str], pricing_lines: List[str]) -> int:
+    score = 3
+    score += min(len(new_features), 5)
+    if price_movements:
+        score += 1
+    if any("enterprise" in line.lower() or "gate" in line.lower() for line in pricing_lines):
+        score += 1
+    if any("ai" in line.lower() or "automation" in line.lower() for line in new_features):
+        score += 1
+    return max(1, min(10, score))
+
+
 def run_simulated_crew(competitor_name: str, baseline_features: str, baseline_pricing: str, scraped_data: str) -> Tuple[Dict[str, str], int]:
     """
     Runs a detailed, deterministic simulation of the 5-agent competitive intelligence crew.
     Produces high-fidelity corporate analysis based on the actual inputs,
     completely bypassing any LLM API requirements while maintaining realistic executive structure.
     """
-    # Build customized analysis based on competitor name
-    is_acme = "acme" in competitor_name.lower()
-    is_chatify = "chatify" in competitor_name.lower()
-    
-    # Simplified output for simulated mode, indicating full analysis requires an LLM.
+    feature_lines = _extract_feature_lines(scraped_data)
+    pricing_lines = _extract_pricing_lines(scraped_data)
+    new_features = [line for line in feature_lines if _is_new_against_baseline(line, baseline_features)]
+    pricing_changes = [line for line in pricing_lines if _is_new_against_baseline(line, baseline_pricing)]
+    price_movements = _extract_price_movements(pricing_changes or pricing_lines)
+    threat_score = _score_threat(new_features, price_movements, pricing_lines)
+
+    structured_scrape = _build_structured_scrape(competitor_name, scraped_data, feature_lines, pricing_lines)
+
+    feature_deltas = (
+        f"Feature Delta Analyst Report: {competitor_name}\n\n"
+        "Baseline compared:\n"
+        f"{baseline_features or 'No baseline features supplied.'}\n\n"
+        "New or materially expanded scraped feature signals:\n"
+        f"{_format_bullets(new_features, 'No feature delta was found beyond the supplied baseline.')}\n\n"
+        "Evidence discipline: every item above is copied or condensed from the scraping sentinel source."
+    )
+
+    pricing_analysis = (
+        f"Pricing and Packaging Analyst Report: {competitor_name}\n\n"
+        "Baseline compared:\n"
+        f"{baseline_pricing or 'No baseline pricing supplied.'}\n\n"
+        "Scraped pricing and packaging observations:\n"
+        f"{_format_bullets(pricing_changes or pricing_lines, 'No pricing or packaging data was found in the scrape.')}\n\n"
+        "Explicit price movement or gating signals:\n"
+        f"{_format_bullets(price_movements, 'No explicit price movement or gating signal was found.')}"
+    )
+
+    strength_items = new_features[:3] or feature_lines[:2]
+    weakness_items = price_movements[:2] or pricing_changes[:2]
+    opportunities = [
+        f"Counter-position against {competitor_name}'s scraped launches with roadmap, enablement, or packaging updates."
+    ] if new_features or pricing_lines else ["Maintain monitoring until more competitor evidence is available."]
+    threats = [
+        f"{competitor_name} is showing {len(new_features)} feature delta signal(s) and {len(price_movements)} pricing/package signal(s) in the latest scrape."
+    ]
+
+    swot_analysis = (
+        f"Threat and SWOT Evaluator Report: {competitor_name}\n\n"
+        "Strengths observed in competitor scrape:\n"
+        f"{_format_bullets(strength_items, 'No clear competitor strength was found.')}\n\n"
+        "Weaknesses or friction points observed:\n"
+        f"{_format_bullets(weakness_items, 'No clear weakness or pricing friction was found.')}\n\n"
+        "Opportunities for our response:\n"
+        f"{_format_bullets(opportunities, 'No specific opportunity was identified.')}\n\n"
+        "Threats:\n"
+        f"{_format_bullets(threats, 'No specific threat was identified.')}\n\n"
+        f"Threat Score: {threat_score}/10"
+    )
+
+    executive_brief = (
+        f"Executive Brief: {competitor_name}\n\n"
+        f"Summary: The latest scrape for {competitor_name} shows "
+        f"{len(new_features)} feature delta signal(s) and {len(price_movements)} pricing/package signal(s) versus the configured baseline.\n\n"
+        "Product actions:\n"
+        f"{_format_bullets(new_features[:4], 'No immediate product action is supported by the scrape.')}\n\n"
+        "Commercial actions:\n"
+        f"{_format_bullets(price_movements[:4], 'No immediate pricing action is supported by the scrape.')}\n\n"
+        f"Recommended priority: Treat as threat level {threat_score}/10 and keep the next analysis tied to fresh scrape evidence."
+    )
+
     simulated_output = {
-        "raw_scraped_data": scraped_data,
-        "feature_deltas": "Feature delta analysis requires a configured LLM API key.",
-        "pricing_analysis": "Pricing analysis requires a configured LLM API key.",
-        "swot_analysis": "SWOT and threat evaluation require a configured LLM API key.",
-        "executive_brief": "Executive briefing requires a configured LLM API key.",
+        "raw_scraped_data": structured_scrape,
+        "feature_deltas": feature_deltas,
+        "pricing_analysis": pricing_analysis,
+        "swot_analysis": swot_analysis,
+        "executive_brief": executive_brief,
     }
-    return simulated_output, 1 # Return a default threat score of 1 in simulated mode
+    return simulated_output, threat_score
 
 
 def run_crewai_flow(competitor_name: str, baseline_features: str, baseline_pricing: str, scraped_data: str) -> Tuple[Dict[str, str], int]:
@@ -117,25 +314,29 @@ def run_crewai_flow(competitor_name: str, baseline_features: str, baseline_prici
         t2 = Task(
             description=f"Compare the structured updates from Agent 1 against these baselines: \n{baseline_features}\nList all new features, enhancements, and shifts. Ensure every item listed is directly verifiable from the provided inputs, and do not introduce any new information.",
             expected_output="A list of newly identified features, product additions, and messaging adjustments, all of which are explicitly supported by the comparison data.",
-            agent=delta_analyst
+            agent=delta_analyst,
+            context=[t1]
         )
         
         t3 = Task(
             description=f"Compare the structured pricing from Agent 1 against these baselines: \n{baseline_pricing}\nDetail price increases, tier changes, and gating strategies. The report must be strictly factual, based only on the provided pricing data, and must not include any speculative analysis.",
             expected_output="Detailed, factual report explaining package modifications, precise price changes, and explicit expansion strategies as identified from the structured pricing data.",
-            agent=pricing_analyst
+            agent=pricing_analyst,
+            context=[t1]
         )
         
         t4 = Task(
             description="Use the factual feature updates and pricing reports to produce a detailed SWOT matrix and a distinct threat level score (1 to 10) for our product. Ensure all points in the SWOT analysis and the threat score are directly supported by the preceding reports, without introducing any external or unverified information.",
             expected_output="A clean, evidence-based Strengths, Weaknesses, Opportunities, and Threats matrix, followed by a final numeric score (e.g., Threat Score: 8/10), all derived solely from the provided reports.",
-            agent=threat_evaluator
+            agent=threat_evaluator,
+            context=[t2, t3]
         )
         
         t5 = Task(
             description="Combine the factual SWOT matrix, feature delta, and pricing changes to draft an Executive Memo with clear, evidence-based product and sales action items. The memo must not contain any new information not present in the preceding agent outputs, ensuring all recommendations are directly supported by the gathered intelligence.",
             expected_output="A complete, fact-based product executive brief with standard business headers, a summary, and competitive playbook items, all strictly derived from the inputs of previous agents.",
-            agent=executive_briefer
+            agent=executive_briefer,
+            context=[t2, t3, t4]
         )
         
         crew = Crew(
