@@ -1,0 +1,14 @@
+# Virtual Environments
+.venv/
+
+# Environment Variables / Secrets
+.env
+
+# Python Cache Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Database (Optional but recommended)
+backend/db.json
