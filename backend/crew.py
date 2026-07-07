@@ -79,7 +79,16 @@ def _extract_pricing_lines(scraped_data: str) -> List[str]:
         if is_heading and in_pricing_section and not is_pricing_heading:
             in_pricing_section = False
 
-        explicit_price_line = "$" in line or "/mo" in lower or "previously" in lower
+        has_math_dollar_markup = "$$$" in line
+        explicit_price_line = (
+            not has_math_dollar_markup
+            and (
+                bool(re.search(r"\$\s?\d", line))
+                or "/mo" in lower
+                or "previously" in lower
+                or " usd" in lower
+            )
+        )
         named_package_line = any(word in lower for word in ("tier", " plan", "gate tier", "custom contract"))
         if explicit_price_line or (in_pricing_section and named_package_line):
             pricing_lines.append(line)
@@ -124,7 +133,7 @@ def _extract_price_movements(pricing_lines: List[str]) -> List[str]:
             current = previous_match.group(1)
             previous = previous_match.group(2)
             movements.append(f"{line} (observed increase from ${previous}/mo to ${current}/mo)")
-        elif "$" in line or "custom" in line.lower() or "gate" in line.lower():
+        elif ("$$$" not in line and "$" in line) or "custom" in line.lower() or "gate" in line.lower():
             movements.append(line)
     return _dedupe_keep_order(movements)
 
@@ -159,12 +168,45 @@ def _score_threat(new_features: List[str], price_movements: List[str], pricing_l
     return max(1, min(10, score))
 
 
+def _crawl_failed_without_evidence(scraped_data: str) -> bool:
+    return "=== LIVE CRAWL FAILED FOR CUSTOM COMPETITOR:" in scraped_data
+
+
 def run_simulated_crew(competitor_name: str, baseline_features: str, baseline_pricing: str, scraped_data: str) -> Tuple[Dict[str, str], int]:
     """
     Runs a detailed, deterministic simulation of the 5-agent competitive intelligence crew.
     Produces high-fidelity corporate analysis based on the actual inputs,
     completely bypassing any LLM API requirements while maintaining realistic executive structure.
     """
+    if _crawl_failed_without_evidence(scraped_data):
+        no_evidence = (
+            f"No verified competitive intelligence could be produced for {competitor_name} because the live crawl failed. "
+            "No simulated features, pricing, SWOT claims, or recommendations were generated."
+        )
+        return {
+            "raw_scraped_data": scraped_data,
+            "feature_deltas": (
+                f"Feature Delta Analyst Report: {competitor_name}\n\n"
+                f"{no_evidence}\n\n"
+                "Action required: use a publicly crawlable URL or provide manually captured source text."
+            ),
+            "pricing_analysis": (
+                f"Pricing and Packaging Analyst Report: {competitor_name}\n\n"
+                f"{no_evidence}\n\n"
+                "No pricing movement can be asserted from the available scrape."
+            ),
+            "swot_analysis": (
+                f"Threat and SWOT Evaluator Report: {competitor_name}\n\n"
+                "SWOT unavailable: no verified source evidence was captured.\n\n"
+                "Threat Score: 1/10"
+            ),
+            "executive_brief": (
+                f"Executive Brief: {competitor_name}\n\n"
+                f"{no_evidence}\n\n"
+                "Recommended next step: rerun with a crawlable page or add a manual evidence capture workflow before drawing conclusions."
+            ),
+        }, 1
+
     feature_lines = _extract_feature_lines(scraped_data)
     pricing_lines = _extract_pricing_lines(scraped_data)
     new_features = [line for line in feature_lines if _is_new_against_baseline(line, baseline_features)]

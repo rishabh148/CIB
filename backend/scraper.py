@@ -87,7 +87,9 @@ def fetch_live_page(url: str) -> str:
     """Attempts to fetch and parse the text content of a live URL."""
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
         }
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
@@ -100,8 +102,8 @@ def fetch_live_page(url: str) -> str:
 def scrape_competitor_data(name: str, website_url: str, pricing_url: str) -> str:
     """
     Main entry point for competitor data gathering.
-    Tries to crawl the real websites. If they are mock-URLs or live crawls fail,
-    it falls back to highly-detailed simulated outputs tailored to the competitor.
+    Tries to crawl real websites. Demo URLs use tailored mock profiles.
+    Real custom competitors never receive fabricated fallback product/pricing data.
     """
     is_mock = "demo.com" in website_url or "localhost" in website_url or "test" in website_url or not website_url.startswith("http")
     
@@ -133,32 +135,22 @@ def scrape_competitor_data(name: str, website_url: str, pricing_url: str) -> str
             result_parts.append(scraped_pricing)
         return "\n".join(result_parts)
         
-    # If live scraping failed/was a mock domain, use mock profiles
+    # If live scraping failed/was a mock domain, use demo mock profiles only.
     if matched_profile:
         result_parts.append(f"=== SIMULATED CURRENT DATA FOR {name.upper()} ===")
         result_parts.append(matched_profile["website_raw"])
         result_parts.append("\n=== SIMULATED PRICING DATA ===")
         result_parts.append(matched_profile["pricing_raw"])
     else:
-        # Generate a high-quality generic mock profile if the competitor is custom-created
-        # but the crawl failed.
-        result_parts.append(f"=== SIMULATED CURRENT DATA FOR CUSTOM COMPETITOR: {name.upper()} ===")
-        result_parts.append(f"""
-# {name} - Core Corporate Value Proposition
-Providing next-generation intelligent enterprise solutions. Our system automates administrative backlogs and unifies operations.
-
-## New Feature Rollouts:
-- **Enterprise Analytics Engine**: Deep predictive charting with AI anomaly detection.
-- **Automated SOC-2 compliance portal**: Generates security postures automatically.
-- **Advanced Integration Sync**: Real-time push updates with zero queue times.
-- **Collaborative Workspaces**: Multi-department support with SSO role mapping.
-        """)
-        result_parts.append("\n=== SIMULATED PRICING DATA ===")
-        result_parts.append(f"""
-# {name} Pricing Tiers
-- **Basic Plan**: $39/mo. 1,000 monthly executions, single integration bridge, community support.
-- **Business Plan**: $149/mo (previously $99/mo). 10,000 monthly executions, 5 team members, custom webhook integrations.
-- **Enterprise Gate Tier**: Custom contract pricing. Mandatory for SSO (SAML), custom data residency guarantees, SOC-2 dashboard, and SLA support logs.
-        """)
+        result_parts.append(f"=== LIVE CRAWL FAILED FOR CUSTOM COMPETITOR: {name.upper()} ===")
+        result_parts.append(f"Website URL: {website_url}")
+        result_parts.append(f"Website crawl result: {scraped_web or 'No crawl attempted.'}")
+        if pricing_url:
+            result_parts.append(f"Pricing URL: {pricing_url}")
+            result_parts.append(f"Pricing crawl result: {scraped_pricing or 'Pricing crawl was skipped because website crawl failed.'}")
+        result_parts.append(
+            "No simulated product, feature, or pricing claims were generated for this custom competitor. "
+            "Use a publicly crawlable URL, a pricing page that permits server-side requests, or a manual source paste/import path."
+        )
         
     return "\n".join(result_parts)
